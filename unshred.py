@@ -22,7 +22,7 @@ def read_img(path):
     return im.squeeze()
 
 # ---=== EDIT THIS TO CHANGE THE SOURCE FOLDER ===---
-FOLDER = "strips"
+FOLDER = "sample_strips"
 
 # Load every image in the specified folder
 images = []
@@ -64,7 +64,7 @@ def similarity(a,b):
 logger.debug(f"The similarity of the first two images is {similarity(images[0], images[1])}")
 
 # Calculate comparison scores for each pair of strips
-logger.info(f"Calculating scores for {(len(images)*len(images)-1)/2} pairs of strips")
+logger.info(f"Calculating scores for {(len(images)*len(images)-1)//2} pairs of strips")
 sims = {}
 for i, im in enumerate(images):
     for j, im2 in enumerate(images):
@@ -100,7 +100,6 @@ logger.info("Assembling Complete!")
 logger.info("Image exported to ./export.png")
 pca.inverse_transform(images[0])
 built_image = np.concatenate([np.expand_dims(pca.inverse_transform(images[i]),1).astype(np.uint8) for i in build], axis=1)
+imageio.imwrite("export.png", built_image.astype(np.uint8))
 plt.imshow(built_image, cmap='gray')
 plt.show()
-built_image.shape
-imageio.imwrite("export.png", built_image.astype(np.uint8))
