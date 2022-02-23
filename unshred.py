@@ -26,7 +26,7 @@ FOLDER = "strips"
 
 # Load every image in the specified folder
 images = []
-for f in list(os.listdir(FOLDER))[:300]:
+for f in list(os.listdir(FOLDER)):
     images.append(read_img(os.path.join(FOLDER, f)))
 shuffle(images)
 images = np.array(images)
