@@ -1,0 +1,9 @@
+strips/
+strips.tar.gz
+sample_strips/
+training_pages/
+training_strips/
+*.pdf
+export.png
+*.ipynb
+.ipynb_checkpoints/
