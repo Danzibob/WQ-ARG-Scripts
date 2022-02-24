@@ -5,6 +5,7 @@ import os, json
 from matplotlib import pyplot as plt
 from random import randint, shuffle, choice
 import logging as lg
+from multiprocessing import Pool
 lg.basicConfig(level=lg.WARNING, format='%(levelname)s | %(message)s')
 logger = lg.getLogger(__name__)
 
@@ -82,19 +83,48 @@ else:
     logger.info("No similarity cache found, building from scratch...")
     sims = {}
 
+cached_keys = sims.keys()
+
+todo = set()
 for i, k1 in enumerate(keys):
     for k2 in keys[i+1:]:
         sim_key = min(k1, k2) + "," + max(k1,k2)
-        if sim_key in sims: continue
-        sims[sim_key] = similarity(images[k1], images[k2])
+        if sim_key not in cached_keys: todo.add(sim_key)
     if i % 250 == 0:
-        logger.info(f"Done {i}/{len(images)} images")
-logger.info("Complete!")
+        logger.info(f"Scheduling {i}/{len(images)} images")
+logger.info("Done scheduling!")
 
-with open(JSON_CACHE_PATH, 'w') as outfile:
-    json.dump(sims, outfile)
+if len(todo) > 0:
+    THREADS = 8
+    from tqdm import tqdm
+    pbar = tqdm(total=len(todo))
 
-logger.info(f"Saved cache at {JSON_CACHE_PATH}")
+    def get_sim(k1k2):
+        k1, k2 = k1k2.split(",")
+        score = similarity(images[k1], images[k2])
+        pbar.update(THREADS)
+        return score
+
+    from time import time
+    logger.info(f"Calculating similarity for {len(todo)} pairs")
+    if len(todo) > 200000:
+        logger.info("This may take some time...")
+    start = time()
+    pool = Pool(THREADS)
+    out = pool.map(get_sim, todo)
+
+    scores = out
+    logger.info(f"Building Dictionary")
+    kv = dict(zip(todo, scores))
+    logger.info(f"Merging Dictionary")
+    sims = {**sims, **kv}
+    t = time() - start
+    logger.info(f"Took {t} seconds!")
+
+    with open(JSON_CACHE_PATH, 'w') as outfile:
+        json.dump(sims, outfile)
+
+    logger.info(f"Saved cache at {JSON_CACHE_PATH}")
 
 # Build the image based on the similarity matrix
 START_POINT = choice(keys)
