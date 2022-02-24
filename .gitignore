@@ -7,3 +7,5 @@ training_strips/
 export.png
 *.ipynb
 .ipynb_checkpoints/
+mapping.json
+*similarity_cache.json

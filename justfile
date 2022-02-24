@@ -1,5 +1,6 @@
 get-images:
 	wget -O strips.tar.gz https://tjl.co/wqarg/strips.tar.gz
+	wget -O mapping.json https://tjl.co/wqarg/mapping.json
 	tar -xvf strips.tar.gz > /dev/null
 	ls strips | wc -l
 
