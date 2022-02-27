@@ -61,19 +61,30 @@ def collect_image_paths(folder, mapping):
 
 # Builds a matrix of pre-computed colour distances
 def compute_colour_distances(palette):
-    # Pass vals through a log function so non-black colours are closer together
-    # scaled = -10000 / (palette+100) + 100
     scaled = palette.astype(np.float64)
+
+    # ---=== THE COLOUR SIMILARITY ALGORITHM ===---
+    # This function pre-computes distances between all 16 colours in a palette 
+    # so we can reference them fast later
+    # As such, it's okay if this function is kinda slow.
     # But also make the blue channel farther apart than the others
-    scaled[:,2] *= 1.5
+    # 
+    # The difference dictionary uses prime indexes to create unique keys between colours
 
     matrix = {}
 
+    # For each unique combination of colours
     for i, c2 in enumerate(palette):
-        for j, c1 in enumerate(palette):
-            if j > i: break
+        for j, c1 in enumerate(palette[:i+1]):
+            # The key for this combination is P(i) * P(j)
+            key = PRIMES[i] * PRIMES[j]
+
+            # Difference is the euclidian distance between RGB colours
             v = np.linalg.norm(c1-c2)
-            matrix[PRIMES[i] * PRIMES[j]] = v
+
+            # Save difference
+            matrix[key] = v
+
     return matrix
 
 # Expresses the similarity between strips
@@ -84,7 +95,10 @@ def similarity(a,b, matrix):
     # This section returns a similarity score between the two provided strips
     #
     # The algorithm provided looks at the adjacent pixel, as well as pixels
-    # One above and one below that pixel, then sums 
+    # One above and one below that pixel, then sums the distances
+    # 
+    # Since a and b are just palette indexes (primes), we multiply them 
+    # to get a unique colour difference key
     # 
     # NB: This function needs to be pretty heckin fast to not be a bottleneck
     score = 0
